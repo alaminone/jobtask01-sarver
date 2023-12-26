@@ -1,16 +1,21 @@
-const express = require('express')
-const app = express()
+
+
+const express = require("express");
+const app = express();
+const cors = require("cors");
+
+require("dotenv").config();
+
+
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5001;
 
 app.use(cors());
 app.use(express.json());
-// jobtask01
-// IJSXFWBw5kECklbe
 
-
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ufduuil.mongodb.net/?retryWrites=true&w=majority`;
+
+
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -18,62 +23,61 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
-    const taskDatabase = client.db('taskDB');
-    const taskCollection = taskDatabase.collection('per-task');
-    const userCollection = taskDatabase.collection('login-user');
-
-    /**
+    const usersCollection = client.db("taskDB").collection("users");
+    const pertaskCollection = client.db("taskDB").collection("per-task");
+   
+       /**
      * ! get method
      */
 
     app.get('/tasks/:email', async (request, response) => {
       const email = request.params.email;
       const query = { loggedInUserEmail: email };
-      const result = await taskCollection.find(query).toArray();
+      const result = await pertaskCollection.find(query).toArray();
       response.status(200).send(result);
     });
 
     app.get('/tasks/item/:id', async (request, response) => {
       const id = request.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await taskCollection.findOne(query);
+      const result = await pertaskCollection.findOne(query);
       response.status(200).send(result);
     });
 
     app.get('/ongoing', async (request, response) => {
-      const result = await taskCollection.find({ status: 'ongoing' }).toArray();
+      const result = await pertaskCollection.find({ status: 'ongoing' }).toArray();
       response.status(200).send(result);
     });
 
     app.get('/created', async (request, response) => {
-      const result = await taskCollection.find({ status: 'created' }).toArray();
+      const result = await pertaskCollection.find({ status: 'created' }).toArray();
       response.status(200).send(result);
     });
 
     app.get('/completed', async (request, response) => {
-      const result = await taskCollection
+      const result = await pertaskCollection
         .find({ status: 'completed' })
         .toArray();
       response.status(200).send(result);
     });
 
     app.get('/users', async (request, response) => {
-      const result = await userCollection.find().toArray();
+      const result = await usersCollection.find().toArray();
       response.status(200).send(result);
     });
 
     app.get('/users/per/:email', async (request, response) => {
       const email = request.params.email;
       const query = { email: email };
-      const result = await userCollection.findOne(query);
+      const result = await usersCollection.findOne(query);
       response.status(200).send(result);
     });
 
@@ -82,13 +86,13 @@ async function run() {
      */
     app.post('/tasks', async (request, response) => {
       const task = request.body;
-      const result = await taskCollection.insertOne(task);
+      const result = await pertaskCollection.insertOne(task);
       response.status(200).send(result);
     });
 
     app.post('/users', async (request, response) => {
       const users = request.body;
-      const result = await userCollection.insertOne(users);
+      const result = await usersCollection.insertOne(users);
       response.status(200).send(result);
     });
 
@@ -102,7 +106,7 @@ async function run() {
       const updatedDoc = {
         $set: { status: request.body.status },
       };
-      const result = await taskCollection.updateOne(query, updatedDoc);
+      const result = await pertaskCollection.updateOne(query, updatedDoc);
       response.status(200).send(result);
     });
 
@@ -113,12 +117,11 @@ async function run() {
     app.delete('/tasks/:id', async (request, response) => {
       const id = request.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await taskCollection.deleteOne(query);
+      const result = await pertaskCollection.deleteOne(query);
       response.status(200).send(result);
     });
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+   
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -126,12 +129,10 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-
-app.get('/', (req, res) => {
-  res.send('successfully connected')
-})
+app.get("/", (req, res) => {
+  res.send("Dhaka Spice House Resturent server is running");
+});
 
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Dhaka Spice House Resturent server is running on port ${port}`);
 });
